@@ -187,7 +187,7 @@ void fmc_sdram_timing_init(fmc_sdram_timing_typedef *Timing, uint32_t Bank)
 }
 void sdram_init(void) {
 //void *Params)
-	//GPIO_InitTypeDef gpio_init_structure;
+	GPIO_INIT gpio;
 	dma_init_typedef dmaInit;
 	/* Enable FMC clock */
 	RCC->AHB3ENR |= RCC_AHB3ENR_FMCEN;
@@ -204,15 +204,15 @@ void sdram_init(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOHEN;
 
 	/* Common GPIO configuration */
-//	gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-//	gpio_init_structure.Pull      = GPIO_PULLUP;
-//	gpio_init_structure.Speed     = GPIO_SPEED_FAST;
-//	gpio_init_structure.Alternate = GPIO_AF12_FMC;
+	gpio.Mode      = GPIO_MODE_AF_PP;
+	gpio.Pull      = GPIO_PULLUP;
+	gpio.Speed     = GPIO_SPEED_FAST;
+	gpio.Alternate = GPIO_AF12_FMC;
 
-/*	 GPIOC configuration
-	gpio_init_structure.Pin   = GPIO_PIN_3;
-	HAL_GPIO_Init(GPIOC, &gpio_init_structure);
-
+	 //GPIOC configuration
+	gpio.Pin   = GPIO_PIN_3;
+	GPIO_Init(GPIOC, &gpio);
+	/*
 	 GPIOD configuration
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
 							  GPIO_PIN_10 | GPIO_PIN_14 | GPIO_PIN_15;

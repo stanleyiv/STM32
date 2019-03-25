@@ -4,6 +4,8 @@
 #include <flash.h>
 #include <qspi.h>
 #include <sdram.h>
+#include <stm32f7xx_hal_gpio.h>
+#include <stm32f746xx.h>
 
 void clock_reset(void);
 void clock_setup(void);
@@ -11,6 +13,7 @@ void clock_LTDC(void);
 void led_init(void);
 void led_toggle(int ms);
 static void Fill_Buffer(uint32_t *pBuffer, uint32_t uwBufferLength, uint32_t uwOffset);
+
 
 #define BUFFER_SIZE         ((uint32_t)0x1000)
 #define WRITE_READ_ADDR     ((uint32_t)0x0800)
@@ -50,176 +53,188 @@ int main(void) {
 	FLASH->ACR |= FLASH_ACR_PRFTEN;
 	clock_reset();
 	clock_setup();
+	GPIO_INIT gpio;
+//	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOIEN;
+//	gpio.Mode      = GPIO_MODE_OUTPUT_PP;
+//	gpio.Pull      = GPIO_NOPULL;
+//	gpio.Speed     = GPIO_SPEED_FAST;
+//	gpio.Pin       = GPIO_PIN_1;
+//	GPIO_Init(GPIOI, &gpio);
 	led_init();
-	sdram_timing.LoadToActiveDelay    = 2;
-	sdram_timing.ExitSelfRefreshDelay = 6;
-	sdram_timing.SelfRefreshTime      = 4;
-	sdram_timing.RowCycleDelay        = 6;
-	sdram_timing.WriteRecoveryTime    = 2;
-	sdram_timing.RPDelay              = 2;
-	sdram_timing.RCDDelay             = 2;
-	sdramInit.SDBank             = FMC_SDRAM_BANK1;
-	sdramInit.ColumnBitsNumber   = FMC_SDRAM_COLUMN_BITS_NUM_8;
-	sdramInit.RowBitsNumber      = FMC_SDRAM_ROW_BITS_NUM_12;
-	sdramInit.MemoryDataWidth    = SDRAM_MEMORY_WIDTH;
-	sdramInit.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
-	sdramInit.CASLatency         = FMC_SDRAM_CAS_LATENCY_2;
-	sdramInit.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
-	sdramInit.SDClockPeriod      = SDCLOCK_PERIOD;
-	sdramInit.ReadBurst          = FMC_SDRAM_RBURST_ENABLE;
-	sdramInit.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_0;
-	/* Setup clocks, gpios, and dma */
-	sdram_init();
-	/* Initialize SDRAM control Interface */
-	fmc_sdram_bankConfig(&sdramInit);
-	/* Initialize SDRAM timing Interface */
-	fmc_sdram_timing_init(&sdram_timing, sdramInit.SDBank);
-	/* Program the SDRAM external device */
-	sdram_external_device(&sdramInit, &sdram_command);
-	/*##-2- SDRAM memory read/write access #####################################*/
-	/* Fill the buffer to write */
-	Fill_Buffer(aTxBuffer, BUFFER_SIZE, 0xA244250F);
-	/* Write data to the SDRAM memory */
-	for (INDEX = 0; INDEX < BUFFER_SIZE; INDEX++) {
-		*(__IO uint32_t*) (SDRAM_BANK_ADDR + WRITE_READ_ADDR + 4*INDEX) = aTxBuffer[INDEX];
-	}
-	/* Read back data from the SDRAM memory */
-	for (INDEX = 0; INDEX < BUFFER_SIZE; INDEX++) {
-		aRxBuffer[INDEX] = *(__IO uint32_t*) (SDRAM_BANK_ADDR + WRITE_READ_ADDR + 4*INDEX);
-	}
-	  /*##-3- Checking data integrity ############################################*/
-	for (INDEX = 0; (INDEX < BUFFER_SIZE) && (sdram_status == 0); INDEX++)
-	{
-		if (aRxBuffer[INDEX] != aTxBuffer[INDEX]) {
-			sdram_status++;
-		}
-
-		if (sdram_status > 0) {
-			while(1) {
-				led_toggle(100);
-			}
-		}
-		else {
-			GPIOI->BSRR |= GPIO_BSRR_BS_1;
-		}
-	}
-//	qspi_deinit();
-//	qspiInit.ClockPrescaler     = 2;
-//	qspiInit.FifoThreshold      = 4;
-//	qspiInit.SampleShifting     = QSPI_SAMPLE_SHIFTING_HALFCYCLE;
-//	qspiInit.FlashSize          = POSITION_VAL(0x1000000) - 1;
-//	qspiInit.ChipSelectHighTime = QSPI_CS_HIGH_TIME_2_CYCLE;
-//	qspiInit.ClockMode          = QSPI_CLOCK_MODE_0;
-//	qspiInit.FlashID            = QSPI_FLASH_ID_1;
-//	qspiInit.DualFlash          = QSPI_DUALFLASH_DISABLE;
-//	qspi_init();
-//	qspi_cmd.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-//	qspi_cmd.AddressSize       = QSPI_ADDRESS_24_BITS;
-//	qspi_cmd.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-//	qspi_cmd.DdrMode           = QSPI_DDR_MODE_DISABLE;
-//	qspi_cmd.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-//	qspi_cmd.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
-//
-//	switch(step) {
-//	  case 0:
-//		CmdCplt = 0;
-//		/* Initialize Reception buffer --------------------------------------- */
-//		for (INDEX = 0; INDEX < BUFFERSIZE; INDEX++) {
-//		  aRxBuffer[INDEX] = 0;
-//		}
-//		/* Enable write operations ------------------------------------------- */
-//		QSPI_WriteEnable(&QSPIHandle);
-//		/* Erasing Sequence -------------------------------------------------- */
-//		qspi_cmd.Instruction = SECTOR_ERASE_CMD;
-//		qspi_cmd.AddressMode = QSPI_ADDRESS_1_LINE;
-//		qspi_cmd.Address     = address;
-//		qspi_cmd.DataMode    = QSPI_DATA_NONE;
-//		qspi_cmd.DummyCycles = 0;
-//		qspi_command(&qspi_cmd);
-//		step++;
-//		break;
-//
-//	  case 1:
-//		if(CmdCplt != 0)
-//		{
-//		  CmdCplt = 0;
-//		  StatusMatch = 0;
-//		  /* Configure automatic polling mode to wait for end of erase ------- */
-//		  QSPI_AutoPollingMemReady(&QSPIHandle);
-//		  step++;
-//		}
-//		break;
-//	  case 2:
-//		if(StatusMatch != 0)
-//		{
-//		  StatusMatch = 0;
-//		  TxCplt = 0;
-//		  /* Enable write operations ----------------------------------------- */
-//		  QSPI_WriteEnable(&QSPIHandle);
-//		  /* Writing Sequence ------------------------------------------------ */
-//		  qspi_cmd.Instruction = QUAD_IN_FAST_PROG_CMD;
-//		  qspi_cmd.AddressMode = QSPI_ADDRESS_1_LINE;
-//		  qspi_cmd.DataMode    = QSPI_DATA_4_LINES;
-//		  qspi_cmd.NbData      = BUFFERSIZE;
-//		  qspi_command(&qspi_cmd);
-//		  HAL_QSPI_Transmit_IT(&QSPIHandle, aTxBuffer);
-//		  step++;
-//		}
-//		break;
-//
-//	  case 3:
-//		if(TxCplt != 0)
-//		{
-//		  TxCplt = 0;
-//		  StatusMatch = 0;
-//		  /* Configure automatic polling mode to wait for end of program ----- */
-//		  QSPI_AutoPollingMemReady(&QSPIHandle);
-//		  step++;
-//		}
-//		break;
-//	  case 4:
-//		if(StatusMatch != 0)
-//		{
-//		  StatusMatch = 0;
-//		  RxCplt = 0;
-//		  /* Configure Volatile Configuration register (with new dummy cycles) */
-//		  QSPI_DummyCyclesCfg(&QSPIHandle);
-//		  /* Reading Sequence ------------------------------------------------ */
-//		  qspi_cmd.Instruction = QUAD_OUT_FAST_READ_CMD;
-//		  qspi_cmd.DummyCycles = DUMMY_CLOCK_CYCLES_READ_QUAD;
-//		  qspi_command(&qspi_cmd);
-//		  HAL_QSPI_Receive_IT(&QSPIHandle, aRxBuffer);
-//		  step++;
-//		}
-//		break;
-//	  case 5:
-//		if (RxCplt != 0)
-//		{
-//		  RxCplt = 0;
-//		  /* Result comparison ----------------------------------------------- */
-//		  for (INDEX = 0; INDEX < BUFFERSIZE; INDEX++)
-//		  {
-//			if (aRxBuffer[INDEX] != aTxBuffer[INDEX])
-//			{
-//				led_toggle(100);;
-//			}
-//		  }
-//		  address += QSPI_PAGE_SIZE;
-//		  if(address >= QSPI_END_ADDR)
-//		  {
-//			address = 0;
-//		  }
-//		  step = 0;
-//		}
-//		break;
-//
-//	  default :
-//		  led_toggle(100);
-//	}
-	clock_LTDC();
 	while(1) {
-
+		GPIOI->BSRR |= GPIO_BSRR_BS_1;
 	}
+
+//	led_init();
+//	sdram_timing.LoadToActiveDelay    = 2;
+//	sdram_timing.ExitSelfRefreshDelay = 6;
+//	sdram_timing.SelfRefreshTime      = 4;
+//	sdram_timing.RowCycleDelay        = 6;
+//	sdram_timing.WriteRecoveryTime    = 2;
+//	sdram_timing.RPDelay              = 2;
+//	sdram_timing.RCDDelay             = 2;
+//	sdramInit.SDBank             = FMC_SDRAM_BANK1;
+//	sdramInit.ColumnBitsNumber   = FMC_SDRAM_COLUMN_BITS_NUM_8;
+//	sdramInit.RowBitsNumber      = FMC_SDRAM_ROW_BITS_NUM_12;
+//	sdramInit.MemoryDataWidth    = SDRAM_MEMORY_WIDTH;
+//	sdramInit.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+//	sdramInit.CASLatency         = FMC_SDRAM_CAS_LATENCY_2;
+//	sdramInit.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+//	sdramInit.SDClockPeriod      = SDCLOCK_PERIOD;
+//	sdramInit.ReadBurst          = FMC_SDRAM_RBURST_ENABLE;
+//	sdramInit.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_0;
+//	/* Setup clocks, gpios, and dma */
+//	sdram_init();
+//	/* Initialize SDRAM control Interface */
+//	fmc_sdram_bankConfig(&sdramInit);
+//	/* Initialize SDRAM timing Interface */
+//	fmc_sdram_timing_init(&sdram_timing, sdramInit.SDBank);
+//	/* Program the SDRAM external device */
+//	sdram_external_device(&sdramInit, &sdram_command);
+//	/*##-2- SDRAM memory read/write access #####################################*/
+//	/* Fill the buffer to write */
+//	Fill_Buffer(aTxBuffer, BUFFER_SIZE, 0xA244250F);
+//	/* Write data to the SDRAM memory */
+//	for (INDEX = 0; INDEX < BUFFER_SIZE; INDEX++) {
+//		*(__IO uint32_t*) (SDRAM_BANK_ADDR + WRITE_READ_ADDR + 4*INDEX) = aTxBuffer[INDEX];
+//	}
+//	/* Read back data from the SDRAM memory */
+//	for (INDEX = 0; INDEX < BUFFER_SIZE; INDEX++) {
+//		aRxBuffer[INDEX] = *(__IO uint32_t*) (SDRAM_BANK_ADDR + WRITE_READ_ADDR + 4*INDEX);
+//	}
+//	  /*##-3- Checking data integrity ############################################*/
+//	for (INDEX = 0; (INDEX < BUFFER_SIZE) && (sdram_status == 0); INDEX++)
+//	{
+//		if (aRxBuffer[INDEX] != aTxBuffer[INDEX]) {
+//			sdram_status++;
+//		}
+//
+//		if (sdram_status > 0) {
+//			while(1) {
+//				led_toggle(100);
+//			}
+//		}
+//		else {
+//			GPIOI->BSRR |= GPIO_BSRR_BS_1;
+//		}
+//	}
+////	qspi_deinit();
+////	qspiInit.ClockPrescaler     = 2;
+////	qspiInit.FifoThreshold      = 4;
+////	qspiInit.SampleShifting     = QSPI_SAMPLE_SHIFTING_HALFCYCLE;
+////	qspiInit.FlashSize          = POSITION_VAL(0x1000000) - 1;
+////	qspiInit.ChipSelectHighTime = QSPI_CS_HIGH_TIME_2_CYCLE;
+////	qspiInit.ClockMode          = QSPI_CLOCK_MODE_0;
+////	qspiInit.FlashID            = QSPI_FLASH_ID_1;
+////	qspiInit.DualFlash          = QSPI_DUALFLASH_DISABLE;
+////	qspi_init();
+////	qspi_cmd.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+////	qspi_cmd.AddressSize       = QSPI_ADDRESS_24_BITS;
+////	qspi_cmd.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+////	qspi_cmd.DdrMode           = QSPI_DDR_MODE_DISABLE;
+////	qspi_cmd.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+////	qspi_cmd.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+////
+////	switch(step) {
+////	  case 0:
+////		CmdCplt = 0;
+////		/* Initialize Reception buffer --------------------------------------- */
+////		for (INDEX = 0; INDEX < BUFFERSIZE; INDEX++) {
+////		  aRxBuffer[INDEX] = 0;
+////		}
+////		/* Enable write operations ------------------------------------------- */
+////		QSPI_WriteEnable(&QSPIHandle);
+////		/* Erasing Sequence -------------------------------------------------- */
+////		qspi_cmd.Instruction = SECTOR_ERASE_CMD;
+////		qspi_cmd.AddressMode = QSPI_ADDRESS_1_LINE;
+////		qspi_cmd.Address     = address;
+////		qspi_cmd.DataMode    = QSPI_DATA_NONE;
+////		qspi_cmd.DummyCycles = 0;
+////		qspi_command(&qspi_cmd);
+////		step++;
+////		break;
+////
+////	  case 1:
+////		if(CmdCplt != 0)
+////		{
+////		  CmdCplt = 0;
+////		  StatusMatch = 0;
+////		  /* Configure automatic polling mode to wait for end of erase ------- */
+////		  QSPI_AutoPollingMemReady(&QSPIHandle);
+////		  step++;
+////		}
+////		break;
+////	  case 2:
+////		if(StatusMatch != 0)
+////		{
+////		  StatusMatch = 0;
+////		  TxCplt = 0;
+////		  /* Enable write operations ----------------------------------------- */
+////		  QSPI_WriteEnable(&QSPIHandle);
+////		  /* Writing Sequence ------------------------------------------------ */
+////		  qspi_cmd.Instruction = QUAD_IN_FAST_PROG_CMD;
+////		  qspi_cmd.AddressMode = QSPI_ADDRESS_1_LINE;
+////		  qspi_cmd.DataMode    = QSPI_DATA_4_LINES;
+////		  qspi_cmd.NbData      = BUFFERSIZE;
+////		  qspi_command(&qspi_cmd);
+////		  HAL_QSPI_Transmit_IT(&QSPIHandle, aTxBuffer);
+////		  step++;
+////		}
+////		break;
+////
+////	  case 3:
+////		if(TxCplt != 0)
+////		{
+////		  TxCplt = 0;
+////		  StatusMatch = 0;
+////		  /* Configure automatic polling mode to wait for end of program ----- */
+////		  QSPI_AutoPollingMemReady(&QSPIHandle);
+////		  step++;
+////		}
+////		break;
+////	  case 4:
+////		if(StatusMatch != 0)
+////		{
+////		  StatusMatch = 0;
+////		  RxCplt = 0;
+////		  /* Configure Volatile Configuration register (with new dummy cycles) */
+////		  QSPI_DummyCyclesCfg(&QSPIHandle);
+////		  /* Reading Sequence ------------------------------------------------ */
+////		  qspi_cmd.Instruction = QUAD_OUT_FAST_READ_CMD;
+////		  qspi_cmd.DummyCycles = DUMMY_CLOCK_CYCLES_READ_QUAD;
+////		  qspi_command(&qspi_cmd);
+////		  HAL_QSPI_Receive_IT(&QSPIHandle, aRxBuffer);
+////		  step++;
+////		}
+////		break;
+////	  case 5:
+////		if (RxCplt != 0)
+////		{
+////		  RxCplt = 0;
+////		  /* Result comparison ----------------------------------------------- */
+////		  for (INDEX = 0; INDEX < BUFFERSIZE; INDEX++)
+////		  {
+////			if (aRxBuffer[INDEX] != aTxBuffer[INDEX])
+////			{
+////				led_toggle(100);;
+////			}
+////		  }
+////		  address += QSPI_PAGE_SIZE;
+////		  if(address >= QSPI_END_ADDR)
+////		  {
+////			address = 0;
+////		  }
+////		  step = 0;
+////		}
+////		break;
+////
+////	  default :
+////		  led_toggle(100);
+////	}
+//	clock_LTDC();
+//	while(1) {
+//
+//	}
 }
 
 
@@ -328,3 +343,110 @@ static void Fill_Buffer(uint32_t *pBuffer, uint32_t uwBufferLength, uint32_t uwO
     pBuffer[tmpIndex] = tmpIndex + uwOffset;
   }
 }
+void GPIO_Init(GPIO_TypeDef *GPIOx, GPIO_INIT *gpio) {
+	  uint32_t position = 0x00;
+	  uint32_t ioposition = 0x00;
+	  uint32_t iocurrent = 0x00;
+	  uint32_t temp = 0x00;
+
+	  /* Configure the port pins */
+	  for(position = 0; position < 16U; position++)
+	  {
+	    /* Get the IO position */
+	    ioposition = ((uint32_t)0x01) << position;
+	    /* Get the current IO position */
+	    iocurrent = (uint32_t)(gpio->Pin) & ioposition;
+
+	    if(iocurrent == ioposition)
+	    {
+	      /*--------------------- GPIO Mode Configuration ------------------------*/
+	      /* In case of Alternate function mode selection */
+	      if((gpio->Mode == GPIO_MODE_AF_PP) || (gpio->Mode == GPIO_MODE_AF_OD))
+	      {
+	        /* Configure Alternate function mapped with the current IO */
+	        temp = GPIOx->AFR[position >> 3];
+	        temp &= ~((uint32_t)0xF << ((uint32_t)(position & (uint32_t)0x07) * 4)) ;
+	        temp |= ((uint32_t)(gpio->Alternate) << (((uint32_t)position & (uint32_t)0x07) * 4));
+	        GPIOx->AFR[position >> 3] = temp;
+	      }
+
+	      /* Configure IO Direction mode (Input, Output, Alternate or Analog) */
+	      temp = GPIOx->MODER;
+	      temp &= ~(GPIO_MODER_MODER0 << (position * 2));
+	      temp |= ((gpio->Mode & GPIO_MODE) << (position * 2));
+	      GPIOx->MODER = temp;
+
+	      /* In case of Output or Alternate function mode selection */
+	      if((gpio->Mode == GPIO_MODE_OUTPUT_PP) || (gpio->Mode == GPIO_MODE_AF_PP) ||
+	         (gpio->Mode == GPIO_MODE_OUTPUT_OD) || (gpio->Mode == GPIO_MODE_AF_OD))
+	      {
+	        /* Check the Speed parameter */
+	        assert_param(IS_GPIO_SPEED(GPIO_Init->Speed));
+	        /* Configure the IO Speed */
+	        temp = GPIOx->OSPEEDR;
+	        temp &= ~(GPIO_OSPEEDER_OSPEEDR0 << (position * 2));
+	        temp |= (gpio->Speed << (position * 2));
+	        GPIOx->OSPEEDR = temp;
+
+	        /* Configure the IO Output Type */
+	        temp = GPIOx->OTYPER;
+	        temp &= ~(GPIO_OTYPER_OT_0 << position) ;
+	        temp |= (((gpio->Mode & GPIO_OUTPUT_TYPE) >> 4) << position);
+	        GPIOx->OTYPER = temp;
+	      }
+
+	      /* Activate the Pull-up or Pull down resistor for the current IO */
+	      temp = GPIOx->PUPDR;
+	      temp &= ~(GPIO_PUPDR_PUPDR0 << (position * 2));
+	      temp |= ((gpio->Pull) << (position * 2));
+	      GPIOx->PUPDR = temp;
+
+	      /*--------------------- EXTI Mode Configuration ------------------------*/
+	      /* Configure the External Interrupt or event for the current IO */
+	      if((gpio->Mode & EXTI_MODE) == EXTI_MODE)
+	      {
+	        /* Enable SYSCFG Clock */
+	        __HAL_RCC_SYSCFG_CLK_ENABLE();
+
+	        temp = SYSCFG->EXTICR[position >> 2];
+	        temp &= ~(((uint32_t)0x0F) << (4 * (position & 0x03)));
+	        temp |= ((uint32_t)(GPIO_GET_INDEX(GPIOx)) << (4 * (position & 0x03)));
+	        SYSCFG->EXTICR[position >> 2] = temp;
+
+	        /* Clear EXTI line configuration */
+	        temp = EXTI->IMR;
+	        temp &= ~((uint32_t)iocurrent);
+	        if((gpio->Mode & GPIO_MODE_IT) == GPIO_MODE_IT)
+	        {
+	          temp |= iocurrent;
+	        }
+	        EXTI->IMR = temp;
+
+	        temp = EXTI->EMR;
+	        temp &= ~((uint32_t)iocurrent);
+	        if((gpio->Mode & GPIO_MODE_EVT) == GPIO_MODE_EVT)
+	        {
+	          temp |= iocurrent;
+	        }
+	        EXTI->EMR = temp;
+
+	        /* Clear Rising Falling edge configuration */
+	        temp = EXTI->RTSR;
+	        temp &= ~((uint32_t)iocurrent);
+	        if((gpio->Mode & RISING_EDGE) == RISING_EDGE)
+	        {
+	          temp |= iocurrent;
+	        }
+	        EXTI->RTSR = temp;
+
+	        temp = EXTI->FTSR;
+	        temp &= ~((uint32_t)iocurrent);
+	        if((gpio->Mode & FALLING_EDGE) == FALLING_EDGE)
+	        {
+	          temp |= iocurrent;
+	        }
+	        EXTI->FTSR = temp;
+	      }
+	    }
+	  }
+	}
