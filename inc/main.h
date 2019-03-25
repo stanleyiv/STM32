@@ -1,8 +1,11 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#include <stm32f7xx_hal.h>
-#include <stm32f746xx.h>
+#include <stm32f7xx.h>
+
+
+void dumb_delay(int ms);
+
 
 typedef struct {
 	uint32_t PLLSOURCE;

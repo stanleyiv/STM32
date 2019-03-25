@@ -1,9 +1,10 @@
 #ifndef __DMA_H
 #define __DMA_H
 
-#include <stm32f7xx.h>
-#include <stm32f746xx.h>
-#include <stm32f7xx_hal_dma.h>
+//#include <stm32f7xx.h>
+#include <main.h>
+
+
 typedef struct
 {
 	uint32_t Channel;              /*!< Specifies the channel used for the specified stream.

@@ -1,9 +1,9 @@
 #ifndef __SDRAM_H
 #define __SDRAM_H
 
-#include <stm32f7xx_ll_fmc.h>
+//#include <stm32f7xx_ll_fmc.h>
 #include <stm32f7xx_hal.h>
-#include <stm32f746xx.h>
+//#include <stm32f7xx.h>
 
 
 #define SDRAM_MODEREG_BURST_LENGTH_1             ((uint16_t)0x0000)

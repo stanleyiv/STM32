@@ -1,5 +1,8 @@
 #include <sdram.h>
-
+#include <dma.h>
+#include <main.h>
+#include <stm32f7xx_hal.h>
+#include <stm32f7xx_hal_gpio.h>
 void fmc_sdram_sendCommand(fmc_sdram_init_typedef *sdram, fmc_sdram_command_typedef *Command)
 {
 /*
@@ -36,7 +39,8 @@ void sdram_external_device(fmc_sdram_init_typedef *init, fmc_sdram_command_typed
 
   /* Step 4: Insert 100 us minimum delay */
   /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
-  HAL_Delay(1);
+  //HAL_Delay(1);
+  dumb_delay(1);
 
   /* Step 5: Configure a PALL (precharge all) command */
   Command->CommandMode = FMC_SDRAM_CMD_PALL;
@@ -183,7 +187,7 @@ void fmc_sdram_timing_init(fmc_sdram_timing_typedef *Timing, uint32_t Bank)
 }
 void sdram_init(void) {
 //void *Params)
-	GPIO_InitTypeDef gpio_init_structure;
+	//GPIO_InitTypeDef gpio_init_structure;
 	dma_init_typedef dmaInit;
 	/* Enable FMC clock */
 	RCC->AHB3ENR |= RCC_AHB3ENR_FMCEN;
@@ -200,40 +204,40 @@ void sdram_init(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOHEN;
 
 	/* Common GPIO configuration */
-	gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-	gpio_init_structure.Pull      = GPIO_PULLUP;
-	gpio_init_structure.Speed     = GPIO_SPEED_FAST;
-	gpio_init_structure.Alternate = GPIO_AF12_FMC;
+//	gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
+//	gpio_init_structure.Pull      = GPIO_PULLUP;
+//	gpio_init_structure.Speed     = GPIO_SPEED_FAST;
+//	gpio_init_structure.Alternate = GPIO_AF12_FMC;
 
-	/* GPIOC configuration */
+/*	 GPIOC configuration
 	gpio_init_structure.Pin   = GPIO_PIN_3;
 	HAL_GPIO_Init(GPIOC, &gpio_init_structure);
 
-	/* GPIOD configuration */
+	 GPIOD configuration
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
 							  GPIO_PIN_10 | GPIO_PIN_14 | GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOD, &gpio_init_structure);
 
-	/* GPIOE configuration */
+	 GPIOE configuration
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7| GPIO_PIN_8 | GPIO_PIN_9 |\
 							  GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
 							  GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOE, &gpio_init_structure);
 
-	/* GPIOF configuration */
+	 GPIOF configuration
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| GPIO_PIN_3 | GPIO_PIN_4 |\
 							  GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
 							  GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOF, &gpio_init_structure);
 
-	/* GPIOG configuration */
+	 GPIOG configuration
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4| GPIO_PIN_5 | GPIO_PIN_8 |\
 							  GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
 
-	/* GPIOH configuration */
+	 GPIOH configuration
 	gpio_init_structure.Pin   = GPIO_PIN_3 | GPIO_PIN_5;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
+	HAL_GPIO_Init(GPIOH, &gpio_init_structure); */
 
 	/* Configure common DMA parameters */
 	dmaInit.Channel             = SDRAM_DMAx_CHANNEL;

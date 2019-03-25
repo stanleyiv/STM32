@@ -1,6 +1,8 @@
 #ifndef __FLASH_H
 #define __FLASH_H
 
+#include <stm32f7xx.h>
+
 #include <stm32f7xx_hal_flash.h>
 #include <stm32f7xx_hal_flash_ex.h>
 

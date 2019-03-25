@@ -1,11 +1,9 @@
-#include <main.h>
+//#include <stm32f7xx.h>
+#include "main.h"
 #include <dma.h>
 #include <flash.h>
 #include <qspi.h>
 #include <sdram.h>
-#include <stm32f7xx.h>
-#include <stm32f7xx_hal.h>
-#include "stm32746g_discovery.h"
 
 void clock_reset(void);
 void clock_setup(void);
@@ -304,6 +302,12 @@ void led_toggle(int ms) {
 	GPIOI->BSRR |= GPIO_BSRR_BR_1;
 	for(int i=0;i<ms;i++)
 	{
+		j++;
+	}
+}
+void dumb_delay(int ms) {
+	int i, j = 0;
+	for(i=0;i<ms;i++) {
 		j++;
 	}
 }

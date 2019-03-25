@@ -20,7 +20,7 @@ void dma_init(dma_init_typedef *dmaInit)
 		  dmaInit->Mode                | dmaInit->Priority;
 
   /* the Memory burst and peripheral burst are not used when the FIFO is disabled */
-  if(dmaInit->FIFOMode == DMA_FIFOMODE_ENABLE)
+  if(dmaInit->FIFOMode == DMA_SxFCR_FTH) //DMA_FIFOMODE_ENABLE
   {
     /* Get memory burst and peripheral burst */
     tmp |=  dmaInit->MemBurst | dmaInit->PeriphBurst;
@@ -39,7 +39,7 @@ void dma_init(dma_init_typedef *dmaInit)
   tmp |= dmaInit->FIFOMode;
 
   /* The FIFO threshold is not used when the FIFO mode is disabled */
-  if(dmaInit->FIFOMode == DMA_FIFOMODE_ENABLE)
+  if(dmaInit->FIFOMode == DMA_SxFCR_DMDIS)
   {
     /* Get the FIFO threshold */
     tmp |= dmaInit->FIFOThreshold;
