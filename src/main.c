@@ -1,4 +1,4 @@
-//#include <stm32f7xx.h>
+#include <stm32f7xx.h>
 #include "main.h"
 #include <dma.h>
 #include <flash.h>
@@ -54,15 +54,21 @@ int main(void) {
 	clock_reset();
 	clock_setup();
 	GPIO_INIT gpio;
-//	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOIEN;
-//	gpio.Mode      = GPIO_MODE_OUTPUT_PP;
-//	gpio.Pull      = GPIO_NOPULL;
-//	gpio.Speed     = GPIO_SPEED_FAST;
-//	gpio.Pin       = GPIO_PIN_1;
-//	GPIO_Init(GPIOI, &gpio);
-	led_init();
+	//led_init();
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOIEN;
+	gpio.Mode      = GPIO_MODE_OUTPUT_PP;
+	gpio.Pull      = GPIO_NOPULL;
+	gpio.Speed     = GPIO_SPEED_FAST;
+	gpio.Pin       = GPIO_PIN_1;
+	GPIO_Init(GPIOI, &gpio);
+	int x = 1;
+	if(x == 1) {
+		GPIOI->BSRR = GPIO_BSRR_BS_1;
+	}
+	if(x == 1) {
+		GPIOI->BSRR = GPIO_BSRR_BR_1;
+	}
 	while(1) {
-		GPIOI->BSRR |= GPIO_BSRR_BS_1;
 	}
 
 //	led_init();
@@ -246,7 +252,7 @@ void clock_reset(void) {
 	RCC->CR |= RCC_CR_HSITRIM_4;
 	RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_HSEBYP | RCC_CR_CSSON);
 	while(RCC->CR & RCC_CR_HSERDY) {}
-	RCC->CR &= RCC_CR_PLLON;
+	RCC->CR &= ~RCC_CR_PLLON;
 	while(RCC->CR & RCC_CR_PLLON) {}
 	RCC->CR &= ~(RCC_CR_PLLI2SON);
 	while(RCC->CR & RCC_CR_PLLI2SRDY) {}
@@ -261,22 +267,39 @@ void clock_reset(void) {
 	RCC->CSR |= RCC_CSR_RMVF;
 }
 void clock_setup(void) {
+//	  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+//	  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+//
+//	  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+//	  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+//	  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+//	  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+//	  RCC_OscInitStruct.PLL.PLLM = 25;
+//	  RCC_OscInitStruct.PLL.PLLN = 400;
+//	  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+//	  RCC_OscInitStruct.PLL.PLLQ = 9;
 	pll.PLLSOURCE = 1; //1 for hse, 0 for hsi
 	pll.PLLM = 25;
 	pll.PLLN = 400;
 	pll.PLLP = 0;
-	pll.PLLQ = 0;
+	pll.PLLQ = 9;
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN; //PWR
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 	RCC->CR |= RCC_CR_HSEON;
-	while(!(RCC->CR & RCC_CR_HSERDY)) {}
+	while((RCC->CR & RCC_CR_HSERDY) == 0) {}
 	RCC->CR &= ~(RCC_CR_PLLON);
-	while(!(RCC->CR & RCC_CR_PLLON)) {}
-	RCC->PLLCFGR = (0x20000000 | (pll.PLLSOURCE << RCC_PLLCFGR_PLLSRC_Pos) | (pll.PLLM) |
-			(pll.PLLN << RCC_PLLCFGR_PLLN_Pos) | (pll.PLLP << RCC_PLLCFGR_PLLP_Pos) | (pll.PLLQ << RCC_PLLCFGR_PLLQ_Pos));
+	while(RCC->CR & RCC_CR_PLLRDY) {}
+	RCC->PLLCFGR = (0x20000000 								 |
+				   (pll.PLLSOURCE << RCC_PLLCFGR_PLLSRC_Pos) |
+				   (pll.PLLM) 								 |
+				   (pll.PLLN << RCC_PLLCFGR_PLLN_Pos) 		 |
+				   (pll.PLLP << RCC_PLLCFGR_PLLP_Pos) 		 |
+				   (pll.PLLQ << RCC_PLLCFGR_PLLQ_Pos));
 	RCC->CR |= RCC_CR_PLLON;
 	PWR->CR1 |= PWR_CR1_ODEN;
-	while(!(PWR->CSR1 & PWR_CSR1_ODRDY)) {}
+	while((PWR->CSR1 & PWR_CSR1_ODRDY) ==0) {}
 	PWR->CR1 |= PWR_CR1_ODSWEN;
-	while(!(PWR->CSR1 & PWR_CSR1_ODSWRDY)) {}
+	while((PWR->CSR1 & PWR_CSR1_ODSWRDY) ==0) {}
 	RCC->CFGR &= (~(0xF) << RCC_CFGR_HPRE_Pos);
 	RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
 	RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
@@ -321,10 +344,7 @@ void led_toggle(int ms) {
 	}
 }
 void dumb_delay(int ms) {
-	int i, j = 0;
-	for(i=0;i<ms;i++) {
-		j++;
-	}
+	for(int i=0;i<ms;i++) { }
 }
 /**
   * @brief  Fills buffer with user predefined data.
