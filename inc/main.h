@@ -1,44 +1,35 @@
+
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#include <stm32f7xx.h>
-#include <stm32f7xx_hal_gpio.h>
-#include <stm32f746xx.h>
 
-typedef struct {
-	uint32_t Mode;
-	uint32_t Pull;
-	uint32_t Speed;
-	uint32_t Alternate;
-	uint32_t Pin;
-}GPIO_INIT;
+#include "stm32f7xx_hal.h"
+#include "delay.h"
+#include "rk043fn48h.h"
+#include "ltdc.h"
 
-void dumb_delay(int ms);
-void GPIO_Init(GPIO_TypeDef *GPIOx, GPIO_INIT *gpio);
+#define SDRAM_BASE 0xC0000000
 
-typedef struct {
-	uint32_t PLLSOURCE;
-	uint32_t PLLM;
-	uint32_t PLLN;
-	uint32_t PLLP;
-	uint32_t PLLQ;
-}pll_config;
+	/*
+					THIS IS BPP
+ 	 if(pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
+	{
+	tmp = 4;
+	}
+	else if (pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_RGB888)
+	{
+	tmp = 3;
+	}
+	else if((pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_ARGB4444) || \
+	(pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_RGB565)   || \
+	(pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_ARGB1555) || \
+	(pLayerCfg->PixelFormat == LTDC_PIXEL_FORMAT_AL88))
+	{
+	tmp = 2;
+	}
+	else
+	{
+	tmp = 1;
+	} */
 
-typedef struct {
-	uint32_t PLLSAIN;
-	uint32_t PLLSAIP;
-	uint32_t PLLSAIQ;
-	uint32_t PLLSAIR;
-}pll_sai_config;
-
-#define GPIO_MODE             ((uint32_t)0x00000003U)
-#define EXTI_MODE             ((uint32_t)0x10000000U)
-#define GPIO_MODE_IT          ((uint32_t)0x00010000U)
-#define GPIO_MODE_EVT         ((uint32_t)0x00020000U)
-#define RISING_EDGE           ((uint32_t)0x00100000U)
-#define FALLING_EDGE          ((uint32_t)0x00200000U)
-#define GPIO_OUTPUT_TYPE      ((uint32_t)0x00000010U)
-
-#define GPIO_NUMBER           ((uint32_t)16U)
-
-#endif
+#endif /* __MAIN_H */

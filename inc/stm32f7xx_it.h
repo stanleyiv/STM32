@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Templates/stm32f7xx_it.h 
+  * @file    DMA/DMA_FLASHToRAM/Inc/stm32f7xx_it.h
   * @author  MCD Application Team
   * @brief   This file contains the headers of the interrupt handlers.
   ******************************************************************************
@@ -38,15 +38,14 @@
 #define __STM32F7xx_IT_H
 
 #ifdef __cplusplus
- extern "C" {
-#endif 
+extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-
 void NMI_Handler(void);
 void HardFault_Handler(void);
 void MemManage_Handler(void);
@@ -55,7 +54,7 @@ void UsageFault_Handler(void);
 void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
-void SysTick_Handler(void);
+void DMA_INSTANCE_IRQHANDLER(void);
 
 #ifdef __cplusplus
 }
